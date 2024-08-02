@@ -55,6 +55,20 @@ document.addEventListener('DOMContentLoaded', (event) => {
     });
 
     document.getElementById('newShortcutButton').addEventListener('click', () => createShortcutBlock(shortcutWorkspaceElement));
+    document.getElementById('clearWorkspaceButton').addEventListener('click', () => workspace.clearWorkspace());
+
+    // Ajout des routines par défaut
+    const defaultRoutines = [
+        { name: 'lol', code: 'console.log("lol");' }
+    ];
+
+    defaultRoutines.forEach(routine => {
+        const routineBlock = new RoutineBlock(routine.name, routine.code);
+        toolboxElement.appendChild(routineBlock.element);
+
+        const routineNameBlock = new RoutineNameBlock(routine.name);
+        shortcutToolboxElement.appendChild(routineNameBlock.element);
+    });
 });
 
 
@@ -106,7 +120,6 @@ function updateConnections(block) {
 
     // Update lines connected to the input connection
     if (inputConnection.connectedLine) {
-        console.log('input');
         const line = inputConnection.connectedLine;
         const startX = parseFloat(line.dataset.startX);
         const startY = parseFloat(line.dataset.startY);
@@ -126,7 +139,6 @@ function updateConnections(block) {
 
     // Update lines connected to the output connection
     if (outputConnection.connectedLine) {
-        console.log('output');
         const line = outputConnection.connectedLine;
         const startX = outputConnection.getBoundingClientRect().left - block.parentElement.getBoundingClientRect().left + 5; // Adjust for the center of the point
         const startY = outputConnection.getBoundingClientRect().top - block.parentElement.getBoundingClientRect().top + 5;
@@ -473,13 +485,16 @@ class VarNameBlock {
 
 // ROUTINES BLOCKS
 
+
 class RoutineBlock extends Block {
-    constructor() {
+    constructor(routineName, routineCode) {
         super('routine');
-        this.routineName = 'sayHello'; // Nom par défaut de la routine
+        this.routineName = routineName || 'sayLol'; // Nom par défaut de la routine
+        this.routineCode = routineCode || `console.log('Lol');`; // Code par défaut de la routine
     }
 
     createElement() {
+    console.log(this);
         const block = super.createElement();
         block.innerHTML = '';
 
@@ -487,7 +502,7 @@ class RoutineBlock extends Block {
         routineNameText.textContent = this.routineName;
 
         const routineBodyText = document.createElement('div');
-        routineBodyText.textContent = "sayHello";
+        routineBodyText.textContent = this.routineCode;
 
         block.appendChild(routineNameText);
         block.appendChild(document.createElement('br'));
@@ -500,10 +515,74 @@ class RoutineBlock extends Block {
     }
 
     generateCode() {
-        return `function ${this.routineName}() {\n    console.log('Hello');\n}\n${this.routineName}();\n`;
+        // return `function ${this.routineName}() {\n${this.routineCode}}\n`;
+        return `${this.routineCode}`;
     }
 }
 
+
+class BlockDebutRoutine extends Block {
+    constructor() {
+        super('debut_routine');
+    }
+
+    createElement() {
+        const block = super.createElement();
+        block.innerHTML = '';
+
+        const routineNameInput = document.createElement('input');
+        routineNameInput.setAttribute('type', 'text');
+        routineNameInput.setAttribute('placeholder', 'Nom de la routine');
+        routineNameInput.classList.add('routine-name-input');
+
+        const routineText = document.createElement('span');
+        routineText.textContent = 'DEBUT ';
+
+        block.appendChild(routineText);
+        block.appendChild(routineNameInput);
+        block.appendChild(this.createDeleteButton());
+        block.appendChild(this.createConnectionPoint('input-point'));
+        block.appendChild(this.createConnectionPoint('output-point'));
+
+        return block;
+    }
+
+    generateCode() {
+        const routineName = this.element.querySelector('.routine-name-input').value;
+        return `function ${routineName}() {\n`;
+    }
+}
+
+class BlockFinRoutine extends Block {
+    constructor() {
+        super('fin_routine');
+    }
+
+    createElement() {
+        const block = super.createElement();
+        block.innerHTML = '';
+
+        const routineNameInput = document.createElement('input');
+        routineNameInput.setAttribute('type', 'text');
+        routineNameInput.setAttribute('placeholder', 'Nom de la routine');
+        routineNameInput.classList.add('routine-name-input');
+
+        const routineText = document.createElement('span');
+        routineText.textContent = 'FIN ';
+
+        block.appendChild(routineText);
+        block.appendChild(routineNameInput);
+        block.appendChild(this.createDeleteButton());
+        block.appendChild(this.createConnectionPoint('input-point'));
+        block.appendChild(this.createConnectionPoint('output-point'));
+
+        return block;
+    }
+
+    generateCode() {
+        return `}\n`;
+    }
+}
 
 
 
@@ -513,6 +592,7 @@ class Workspace {
         this.blocks = [];
         this.currentConnection = null;
         this.currentLine = null;
+        this.routines = {}; // Stocker les routines
         this.init();
     }
 
@@ -530,16 +610,16 @@ class Workspace {
         e.preventDefault();
         const type = e.dataTransfer.getData('text/plain');
         const draggingBlock = document.querySelector('.toolbox .block.dragging, .workspace .block.dragging');
-        
+
         if (draggingBlock && draggingBlock.parentElement.classList.contains('workspace')) {
-            // Move existing block
+            // Déplacer le bloc existant
             const offsetX = draggingBlock.dragOffsetX || 0;
             const offsetY = draggingBlock.dragOffsetY || 0;
             draggingBlock.style.left = `${e.clientX - this.element.getBoundingClientRect().left - offsetX}px`;
             draggingBlock.style.top = `${e.clientY - this.element.getBoundingClientRect().top - offsetY}px`;
             draggingBlock.classList.remove('dragging');
         } else {
-            // Create new block if dragging from toolbox
+            // Créer un nouveau bloc si on le glisse depuis la toolbox
             let block;
             switch(type) {
                 case 'debut':
@@ -557,8 +637,14 @@ class Workspace {
                 case 'routine':
                     block = new RoutineBlock();
                     break;
+                case 'debut_routine':
+                    block = new BlockDebutRoutine();
+                    break;
+                case 'fin_routine':
+                    block = new BlockFinRoutine();
+                    break;
             }
-    
+
             if (block) {
                 block.element.style.position = 'absolute';
                 const offsetX = block.dragOffsetX || 0;
@@ -568,18 +654,12 @@ class Workspace {
                 this.element.appendChild(block.element);
                 block.disableDrag();
                 this.blocks.push(block);
-    
-                // Make the new block draggable
+
+                // Rendre le nouveau bloc déplaçable
                 dragElement(block.element);
             }
         }
     }
-    
-    
-
-   
-
-
 
 
     startConnection(block, e) {
@@ -600,7 +680,6 @@ class Workspace {
         document.addEventListener('mousemove', this.trackMouse);
         document.addEventListener('mouseup', this.endConnection);
     }
-    
     
     endConnection = (e) => {
         document.removeEventListener('mousemove', this.trackMouse);
@@ -641,8 +720,8 @@ class Workspace {
     
             this.currentConnection.block.outputConnection.connectedLine = this.currentLine;
             endBlock.inputConnection.connectedLine = this.currentLine;
-            
-            this.currentConnection.block.connectedBlock = endBlock; // Ajouter cette ligne
+    
+            this.currentConnection.block.outputConnection.connectedTo = endBlock; // Ajouter cette ligne
         } else {
             this.currentLine.remove();
         }
@@ -672,7 +751,7 @@ class Workspace {
 
     runCode() {
         let code = '';
-        const blocks = this.blocks.filter(block => block instanceof BlockDebut || block instanceof BlockFin);
+        const blocks = this.blocks.filter(block => block instanceof BlockDebut || block instanceof BlockFin || block instanceof BlockDebutRoutine || block instanceof BlockFinRoutine || block instanceof BlockEcrire);
         if (blocks.length > 0) {
             const queue = [blocks.find(block => block instanceof BlockDebut)];
             while (queue.length > 0) {
@@ -680,6 +759,12 @@ class Workspace {
                 code += currentBlock.generateCode();
                 if (currentBlock.outputConnection && currentBlock.outputConnection.connectedTo) {
                     queue.push(currentBlock.outputConnection.connectedTo);
+                }
+                if (currentBlock instanceof BlockFinRoutine) {
+                    const routineName = currentBlock.element.querySelector('.routine-name-input').value;
+                    const routineCode = code.split(`function ${routineName}() {\n`)[1].split('}\n')[0];
+                    this.addRoutineToToolbox(routineName, routineCode);
+                    code = ''; // Reset code after saving the routine
                 }
             }
         }
@@ -691,62 +776,40 @@ class Workspace {
         }
     }
     
+    addRoutineToToolbox(routineName, routineCode) {
+        if (!this.routines) {
+            this.routines = {};
+        }
+        this.routines[routineName] = routineCode;
+    
+        // Créer un nouveau bloc de routine dans le toolbox
+        const routineBlock = new RoutineBlock(routineName, routineCode);
+        const toolboxElement = document.querySelector('.toolbox');
+        toolboxElement.appendChild(routineBlock.element);
+    
+        // Créer un nouveau bloc de routine dans le shortcut toolbox
+        const routineNameBlock = new RoutineNameBlock(routineName);
+        const shortcutToolboxElement = document.querySelector('.shortcut-toolbox');
+        shortcutToolboxElement.appendChild(routineNameBlock.element);
+    }
+    
+    clearWorkspace() {
+        // Remove all blocks from the workspace
+        this.blocks.forEach(block => block.element.remove());
+        this.blocks = [];
+
+        // Remove all connections (lines) from the workspace
+        const lines = this.element.querySelectorAll('.line');
+        lines.forEach(line => line.remove());
+
+        // // Clear routines
+        // this.routines = {};
+    }
+    
 }
 
 
 // SHORTCUT WORKSPACE
-
-
-// class RoutineNameBlock {
-//     constructor(name) {
-//         this.name = name;
-//         this.element = this.createElement();
-//     }
-
-//     createElement() {
-//         const block = document.createElement('div');
-//         block.classList.add('routine-name-block');
-//         block.setAttribute('draggable', true);
-//         block.setAttribute('data-name', this.name);
-//         block.textContent = this.name;
-
-//         block.addEventListener('dragstart', (e) => this.dragStart(e));
-//         return block;
-//     }
-
-//     dragStart(e) {
-//         e.dataTransfer.setData('text/plain', e.target.dataset.name);
-//         setTimeout(() => {
-//             e.target.classList.add('dragging');
-//         }, 0);
-//     }
-// }
-
-// class RoutineNameBlock {
-//     constructor(name) {
-//         this.name = name;
-//         this.element = this.createElement();
-//     }
-
-//     createElement() {
-//         const block = document.createElement('div');
-//         block.classList.add('routine-name-block');
-//         block.setAttribute('draggable', true);
-//         block.setAttribute('data-name', this.name);
-//         block.textContent = this.name;
-
-//         block.addEventListener('dragstart', (e) => this.dragStart(e));
-//         return block;
-//     }
-
-//     dragStart(e) {
-//         e.dataTransfer.setData('text/plain', e.target.dataset.name);
-//         e.dataTransfer.effectAllowed = 'move'; // Assurez-vous que le type de déplacement est autorisé
-//         setTimeout(() => {
-//             e.target.classList.add('dragging');
-//         }, 0);
-//     }
-// }
 
 class RoutineNameBlock {
     constructor(name) {
