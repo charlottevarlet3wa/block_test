@@ -1,0 +1,97 @@
+body {
+    font-family: Arial, sans-serif;
+}
+
+.block {
+    padding: 10px;
+    margin: 5px;
+    border: 1px solid #000;
+    display: inline-block;
+    cursor: grab;
+    user-select: none;
+}
+
+.connection-point {
+    width: 10px;
+    height: 10px;
+    background-color: black;
+    border-radius: 50%;
+    position: absolute;
+}
+
+.input-point {
+    top: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.output-point {
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.line {
+    position: absolute;
+    background-color: black;
+    height: 2px;
+    pointer-events: none;
+    transform-origin: 0 0;
+}
+
+.toolbox, .workspace, .shortcut-toolbox, .shortcut-workspace {
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin: 10px;
+    height: 50px;
+}
+
+.toolbox, .shortcut-toolbox {
+    display: flex;
+    gap: 1px;
+    flex-wrap: wrap;
+}
+
+.workspace, .shortcut-workspace {
+    min-height: 400px;
+    background-color: #f9f9f9;
+    position: relative;
+}
+
+.workspace .block, .shortcut-workspace .block {
+    position: absolute;
+}
+
+.block.dragging {
+    opacity: 0.5;
+}
+
+.routine-name-block {
+    background-color: purple;
+    color: white;
+    padding: 5px;
+    border-radius: 5px;
+    margin: 5px;
+    cursor: grab;
+}
+
+.shortcut-if-block {
+    background-color: orange;
+    color: black;
+    padding: 10px;
+    border-radius: 5px;
+    margin: 5px;
+    cursor: grab;
+}
+
+.var-block {
+    padding: 5px;
+    margin: 3px;
+    border: 1px solid #000;
+    display: inline-block;
+    cursor: grab;
+    user-select: none;
+    border-radius: 10px;
+    font-size: 0.8em;
+    text-align: center;
+}

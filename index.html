@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Programmation par blocs</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="toolbox">
+        <div class="block" draggable="true" data-type="debut">DEBUT</div>
+        <div class="block" draggable="true" data-type="fin">FIN</div>
+        <div class="block" draggable="true" data-type="si">SI</div>
+        <div class="block" draggable="true" data-type="fin_si">FIN SI</div>
+        <div class="block" draggable="true" data-type="variable_int">VARIABLE INT</div>
+        <div class="block" draggable="true" data-type="ecrire">ECRIRE</div>
+    </div>
+    
+    <div class="workspace"></div>
+
+    <!-- <div class="shortcut-toolbox"></div> -->
+    <!-- <div class="shortcut-workspace"></div> -->
+    <!-- <button id="newShortcutButton">Nouveau raccourci</button> -->
+    
+    <button onclick="workspace.runCode()">Run Code</button>
+    <div id="codeOutput"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
