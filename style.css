@@ -58,12 +58,44 @@ body {
     position: relative;
 }
 
-.workspace .block, .shortcut-workspace .block {
+.workspace .block {
     position: absolute;
 }
 
 .block.dragging {
     opacity: 0.5;
+}
+
+
+/* SHORTCUT */
+
+.shortcut-workspace {
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin: 10px;
+    min-height: 400px;
+    background-color: #f9f9f9;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.shortcut-block {
+    border: 1px solid #000;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.condition, .action {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.action input {
+    width: 100px;
 }
 
 .routine-name-block {
@@ -94,4 +126,9 @@ body {
     border-radius: 10px;
     font-size: 0.8em;
     text-align: center;
+}
+
+.shortcut-condition-block {
+    background-color: lightblue;
+   
 }

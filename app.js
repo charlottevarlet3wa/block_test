@@ -726,25 +726,96 @@ class Workspace {
             console.error(e);
         }
     }
-    // runCode() {
-    //     let code = '';
-    //     const startBlock = this.blocks.find(block => block instanceof BlockDebut);
-    //     if (startBlock) {
-    //         const queue = [startBlock];
-    //         while (queue.length > 0) {
-    //             const currentBlock = queue.shift();
-    //             code += currentBlock.generateCode();
-    //             if (currentBlock.connectedBlock) {
-    //                 queue.push(currentBlock.connectedBlock);
-    //             }
-    //         }
-    //     }
-    //     document.getElementById('codeOutput').textContent = code;
-    //     try {
-    //         eval(code);
-    //     } catch (e) {
-    //         console.error(e);
-    //     }
-    // }
     
+}
+
+
+// SHORTCUT WORKSPACE
+
+document.addEventListener('DOMContentLoaded', (event) => {
+    const workspaceElement = document.querySelector('.shortcut-workspace');
+    const toolboxElement = document.querySelector('.shortcut-toolbox');
+
+    const routineNames = ['coup_de_poing', 'coup_de_pied'];
+    const routineNameBlocks = routineNames.map(name => new RoutineNameBlock(name));
+
+    routineNameBlocks.forEach(routineBlock => {
+        toolboxElement.appendChild(routineBlock.element);
+    });
+
+    document.getElementById('newShortcutButton').addEventListener('click', () => createShortcutBlock(workspaceElement));
+});
+
+class RoutineNameBlock {
+    constructor(name) {
+        this.name = name;
+        this.element = this.createElement();
+    }
+
+    createElement() {
+        const block = document.createElement('div');
+        block.classList.add('routine-name-block');
+        block.setAttribute('draggable', true);
+        block.setAttribute('data-name', this.name);
+        block.textContent = this.name;
+
+        block.addEventListener('dragstart', (e) => this.dragStart(e));
+        return block;
+    }
+
+    dragStart(e) {
+        e.dataTransfer.setData('text/plain', e.target.dataset.name);
+        setTimeout(() => {
+            e.target.classList.add('dragging');
+        }, 0);
+    }
+}
+
+function createShortcutBlock(workspaceElement) {
+    const shortcutBlock = document.createElement('div');
+    shortcutBlock.classList.add('shortcut-block');
+
+    const conditionDiv = document.createElement('div');
+    conditionDiv.classList.add('condition');
+
+    const conditionText = document.createElement('span');
+    conditionText.textContent = 'key == ';
+
+    const keySelect = document.createElement('select');
+    keySelect.innerHTML = `
+        <option value="a">a</option>
+        <option value="b">b</option>
+        <option value="c">c</option>
+        <option value="d">d</option>
+    `;
+
+    conditionDiv.appendChild(conditionText);
+    conditionDiv.appendChild(keySelect);
+
+    const actionDiv = document.createElement('div');
+    actionDiv.classList.add('action');
+
+    const actionInput = document.createElement('input');
+    actionInput.setAttribute('type', 'text');
+    actionInput.setAttribute('placeholder', 'Routine');
+    actionInput.setAttribute('data-accept-type', 'routine');
+    actionInput.addEventListener('dragover', handleDragOver);
+    actionInput.addEventListener('drop', handleDrop);
+
+    actionDiv.appendChild(actionInput);
+
+    shortcutBlock.appendChild(conditionDiv);
+    shortcutBlock.appendChild(actionDiv);
+    workspaceElement.appendChild(shortcutBlock);
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+    const routineName = e.dataTransfer.getData('text/plain');
+    e.target.value = routineName;
 }
