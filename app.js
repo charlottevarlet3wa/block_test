@@ -6,6 +6,8 @@ document.addEventListener('contextmenu', (e) => {
 document.addEventListener('DOMContentLoaded', (event) => {
     const workspaceElement = document.querySelector('.workspace');
     const toolboxElement = document.querySelector('.toolbox');
+    const shortcutWorkspaceElement = document.querySelector('.shortcut-workspace');
+    const shortcutToolboxElement = document.querySelector('.shortcut-toolbox');
 
     window.workspace = new Workspace(workspaceElement);
 
@@ -44,6 +46,15 @@ document.addEventListener('DOMContentLoaded', (event) => {
             }, 0);
         }
     });
+
+    const routineNames = ['coup_de_poing', 'coup_de_pied'];
+    const routineNameBlocks = routineNames.map(name => new RoutineNameBlock(name));
+
+    routineNameBlocks.forEach(routineBlock => {
+        shortcutToolboxElement.appendChild(routineBlock.element);
+    });
+
+    document.getElementById('newShortcutButton').addEventListener('click', () => createShortcutBlock(shortcutWorkspaceElement));
 });
 
 
@@ -591,53 +602,6 @@ class Workspace {
     }
     
     
-
-    // endConnection = (e) => {
-    //     document.removeEventListener('mousemove', this.trackMouse);
-    //     document.removeEventListener('mouseup', this.endConnection);
-    
-    //     const endX = e.clientX - this.element.getBoundingClientRect().left;
-    //     const endY = e.clientY - this.element.getBoundingClientRect().top;
-    
-    //     const endBlock = this.blocks.find(block => {
-    //         const rect = block.inputConnection.getBoundingClientRect();
-    //         return (
-    //             endX >= rect.left - this.element.getBoundingClientRect().left &&
-    //             endX <= rect.right - this.element.getBoundingClientRect().left &&
-    //             endY >= rect.top - this.element.getBoundingClientRect().top &&
-    //             endY <= rect.bottom - this.element.getBoundingClientRect().top
-    //         );
-    //     });
-    
-    //     if (endBlock && endBlock !== this.currentConnection.block) {
-    //         const startX = this.currentConnection.startX;
-    //         const startY = this.currentConnection.startY;
-    //         const endXAdjusted = endX;
-    //         const endYAdjusted = endY;
-    
-    //         const deltaX = endXAdjusted - startX;
-    //         const deltaY = endYAdjusted - startY;
-    
-    //         const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-    //         const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
-    
-    //         this.currentLine.style.width = `${distance}px`;
-    //         this.currentLine.style.transform = `rotate(${angle}deg)`;
-    //         this.currentLine.style.left = `${startX}px`;
-    //         this.currentLine.style.top = `${startY}px`;
-    //         this.currentLine.style.transformOrigin = '0 0';
-    //         this.currentLine.dataset.endX = endXAdjusted;
-    //         this.currentLine.dataset.endY = endYAdjusted;
-    
-    //         this.currentConnection.block.outputConnection.connectedLine = this.currentLine;
-    //         endBlock.inputConnection.connectedLine = this.currentLine;
-    //     } else {
-    //         this.currentLine.remove();
-    //     }
-    
-    //     this.currentConnection = null;
-    //     this.currentLine = null;
-    // };
     endConnection = (e) => {
         document.removeEventListener('mousemove', this.trackMouse);
         document.removeEventListener('mouseup', this.endConnection);
@@ -732,19 +696,57 @@ class Workspace {
 
 // SHORTCUT WORKSPACE
 
-document.addEventListener('DOMContentLoaded', (event) => {
-    const workspaceElement = document.querySelector('.shortcut-workspace');
-    const toolboxElement = document.querySelector('.shortcut-toolbox');
 
-    const routineNames = ['coup_de_poing', 'coup_de_pied'];
-    const routineNameBlocks = routineNames.map(name => new RoutineNameBlock(name));
+// class RoutineNameBlock {
+//     constructor(name) {
+//         this.name = name;
+//         this.element = this.createElement();
+//     }
 
-    routineNameBlocks.forEach(routineBlock => {
-        toolboxElement.appendChild(routineBlock.element);
-    });
+//     createElement() {
+//         const block = document.createElement('div');
+//         block.classList.add('routine-name-block');
+//         block.setAttribute('draggable', true);
+//         block.setAttribute('data-name', this.name);
+//         block.textContent = this.name;
 
-    document.getElementById('newShortcutButton').addEventListener('click', () => createShortcutBlock(workspaceElement));
-});
+//         block.addEventListener('dragstart', (e) => this.dragStart(e));
+//         return block;
+//     }
+
+//     dragStart(e) {
+//         e.dataTransfer.setData('text/plain', e.target.dataset.name);
+//         setTimeout(() => {
+//             e.target.classList.add('dragging');
+//         }, 0);
+//     }
+// }
+
+// class RoutineNameBlock {
+//     constructor(name) {
+//         this.name = name;
+//         this.element = this.createElement();
+//     }
+
+//     createElement() {
+//         const block = document.createElement('div');
+//         block.classList.add('routine-name-block');
+//         block.setAttribute('draggable', true);
+//         block.setAttribute('data-name', this.name);
+//         block.textContent = this.name;
+
+//         block.addEventListener('dragstart', (e) => this.dragStart(e));
+//         return block;
+//     }
+
+//     dragStart(e) {
+//         e.dataTransfer.setData('text/plain', e.target.dataset.name);
+//         e.dataTransfer.effectAllowed = 'move'; // Assurez-vous que le type de déplacement est autorisé
+//         setTimeout(() => {
+//             e.target.classList.add('dragging');
+//         }, 0);
+//     }
+// }
 
 class RoutineNameBlock {
     constructor(name) {
@@ -765,11 +767,16 @@ class RoutineNameBlock {
 
     dragStart(e) {
         e.dataTransfer.setData('text/plain', e.target.dataset.name);
+        e.dataTransfer.setData('type', 'routine'); // Ajout du type de donnée
+        e.dataTransfer.effectAllowed = 'move';
         setTimeout(() => {
             e.target.classList.add('dragging');
+            // console.log('start: ')
+            // console.log(e.dataTransfer.getData('type'));
         }, 0);
     }
 }
+
 
 function createShortcutBlock(workspaceElement) {
     const shortcutBlock = document.createElement('div');
@@ -798,7 +805,7 @@ function createShortcutBlock(workspaceElement) {
     const actionInput = document.createElement('input');
     actionInput.setAttribute('type', 'text');
     actionInput.setAttribute('placeholder', 'Routine');
-    actionInput.setAttribute('data-accept-type', 'routine');
+    actionInput.setAttribute('data-accept-type', 'routine'); // Définir le type accepté
     actionInput.addEventListener('dragover', handleDragOver);
     actionInput.addEventListener('drop', handleDrop);
 
@@ -810,12 +817,22 @@ function createShortcutBlock(workspaceElement) {
 }
 
 function handleDragOver(e) {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
+    console.log("over");
+    console.log(e.target);
+    const acceptType = e.target.getAttribute('data-accept-type');
+    if (e.dataTransfer.getData('type') === acceptType) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+    }
 }
 
 function handleDrop(e) {
     e.preventDefault();
-    const routineName = e.dataTransfer.getData('text/plain');
-    e.target.value = routineName;
+    const acceptType = e.target.getAttribute('data-accept-type');
+    if (e.dataTransfer.getData('type') === acceptType) {
+        const routineName = e.dataTransfer.getData('text/plain');
+        e.target.value = routineName;
+    }
 }
+
+
